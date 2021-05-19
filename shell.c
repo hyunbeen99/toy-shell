@@ -7,10 +7,12 @@
 #include <sys/wait.h>
 
 #define MAX_LEN_LINE    100
+#define PATH_MAX        100
 
 int main(void)
 {
     char command[MAX_LEN_LINE];
+	char cwd[PATH_MAX];
     char *args[] = {command, NULL};
     int ret, status;
     pid_t pid, cpid;
@@ -25,15 +27,27 @@ int main(void)
             fprintf(stderr, "fgets failed\n");
             exit(1);
         }
+		// Exit
+		if (strcmp(s ,"exit\n") == 0){
+			printf("GOOD BYE\n");
+			exit(0);
+		}
+		// Print Current directory path
+		if (strcmp(s ,"pwd\n") == 0){
+			if (getcwd(cwd, sizeof(cwd)) != NULL) {
+				printf("DIRECTORY PATH : %s\n", cwd);
+				//continue;
+			}else{
+				perror("cwd error");
+			}
+		}
         
         len = strlen(command);
-        printf("%d\n", len);
+        //printf("%d\n", len);
         if (command[len - 1] == '\n') {
             command[len - 1] = '\0'; 
         }
-        
-        printf("[%s]\n", command);
-      
+
         pid = fork();
         if (pid < 0) {
             fprintf(stderr, "fork failed\n");
