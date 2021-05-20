@@ -7,15 +7,67 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+//Parameter
 #define MAX_LEN_LINE    100
 #define PATH_MAX        100
+
+//command line color set
+#define RED				"\x1B[31m"
+#define GREEN			"\x1B[32m"
+#define YELLOW 			"\x1B[33m"
+#define BLUE			"\x1B[34m"
+#define DEFAULT			"\x1B[0m"
+
+//main function for command
+void commandFunc(char *s){
+
+	char cwd[PATH_MAX];	
+
+	if (s == NULL) {
+		fprintf(stderr, "fgets failed\n");
+		exit(1);
+	}
+	// Exit => 'exit'
+	if (strcmp(s,"exit\n") == 0){
+		printf(RED "GOOD BYE\n");
+		exit(0);
+	}
+	// Print Current directory path => 'pwd'
+	if (strcmp(s,"pwd\n") == 0){
+		if (getcwd(cwd, sizeof(cwd)) != NULL){
+			printf("DIRECTORY PATH : %s\n", cwd);
+			return;
+		}else{
+			perror("cwd error");
+			return;
+		}
+	}
+	// Print list files if directory => 'ls'
+	if (strcmp(s,"ls\n") == 0){
+		DIR *d;
+		struct dirent *dir;
+		if ((d = opendir(".")) != NULL){
+			while ((dir = readdir(d)) != NULL){
+				printf("%s  ", dir->d_name); 
+			}
+			printf("\n");
+			closedir(d);
+		}else {
+			perror("can not list directory");
+			return;
+		}
+	}
+	
+	else{
+		printf("Command not found :(\n");
+	}
+
+}
 
 int main(void)
 {
     char command[MAX_LEN_LINE];
-	char cwd[PATH_MAX];
     char *args[] = {command, NULL};
-	//char myalias = {"exit", "pwd", "ls"};
     int ret, status;
     pid_t pid, cpid;
     
@@ -23,41 +75,11 @@ int main(void)
         char *s;
         int len;
         
-        printf("MyShell $ ");
+        printf(YELLOW "HyunBeen@Shell $ " DEFAULT);
         s = fgets(command, MAX_LEN_LINE, stdin);
-        if (s == NULL) {
-            fprintf(stderr, "fgets failed\n");
-            exit(1);
-        }
-		// Exit => 'exit'
-		if (strcmp(s,"exit\n") == 0){
-			printf("GOOD BYE\n");
-			exit(0);
-		}
-		// Print Current directory path => 'pwd'
-		if (strcmp(s,"pwd\n") == 0){
-			if (getcwd(cwd, sizeof(cwd)) != NULL) {
-				printf("DIRECTORY PATH : %s\n", cwd);
-			}else{
-				perror("cwd error");
-			}
-		}
-		// Print list files if directory => 'ls'
-		if (strcmp(s,"ls\n") == 0){
-			DIR *d;
-			struct dirent *dir;
-			if ((d = opendir(".")) != NULL){
-				while ((dir = readdir(d)) != NULL){
-					printf("%s  ", dir->d_name); 
-				}
-				printf("\n");
-				closedir(d);
-			}else {
-				perror("can not list directory");
-				return EXIT_FAILURE;
-			}
-		}
-        
+
+		commandFunc(s);
+		
         len = strlen(command);
         //printf("%d\n", len);
         if (command[len - 1] == '\n') {
