@@ -10,6 +10,7 @@
 
 //Parameter
 #define MAX_LEN_LINE    100
+#define MAX_LEN_COMMAND_LINE 1000
 #define PATH_MAX        100
 
 //command line color set
@@ -19,51 +20,12 @@
 #define BLUE		"\x1B[34m"
 #define DEFAULT		"\x1B[0m"
 
-//main function for command
-void commandFunc(char *s){
-
-	char cwd[PATH_MAX];	
-
-	if (s == NULL) {
-		fprintf(stderr, "fgets failed\n");
-		exit(1);
-	}
-	// Exit => 'exit'
-	if (strcmp(s,"exit\n") == 0){
-		printf(RED "GOOD BYE\n" DEFAULT);
-		exit(0);
-	}
-
-	// Print Current directory path => 'pwd'
-	if (strcmp(s,"pwd\n") == 0){
-		if (getcwd(cwd, sizeof(cwd)) != NULL){
-			printf("DIRECTORY PATH : %s\n", cwd);
-		}else{
-			perror("cwd error");
-		}
-	}
-	// Print list files if directory => 'ls'
-	if (strcmp(s,"ls\n") == 0){
-		DIR *d;
-		struct dirent *dir;
-		if ((d = opendir(".")) != NULL){
-			while ((dir = readdir(d)) != NULL){
-				printf("%s  ", dir->d_name); 
-			}
-			printf("\n");
-			closedir(d);
-		}else {
-			perror("can not list directory");
-			return;
-		}
-	}
-
-}
-
 int main(void)
 {
     char command[MAX_LEN_LINE];
-    char *args[] = {command, NULL};
+    char command_path[MAX_LEN_COMMAND_LINE];
+	char cwd[PATH_MAX];	
+    char *args[] = {command_path, command , NULL};
     int ret, status;
     pid_t pid, cpid;
     
@@ -73,8 +35,16 @@ int main(void)
         
         printf(YELLOW "HyunBeen@Shell $ " DEFAULT);
         s = fgets(command, MAX_LEN_LINE, stdin);
-		
-		commandFunc(s);		
+
+		if (s == NULL) {
+			fprintf(stderr, "fgets failed\n");
+			exit(1);
+		}
+		// Exit => 'exit'
+		if (strcmp(s,"exit\n") == 0){
+			printf(RED "GOOD BYE\n" DEFAULT);
+			exit(0);
+		}
 
         len = strlen(command);
         //printf("%d\n", len);
@@ -98,6 +68,17 @@ int main(void)
             }
         }
         else {  /* child */
+			if (execvp(args[1], args) == -1){
+				printf("%s: commend not found\n", args[1]);
+			}
+			// Print Current directory path => 'pwd'
+			else if (strcmp(s,"pwd\n") == 0){
+				args[0] = "/bin/pwd";
+			}
+			// Print list files if directory => 'ls'
+			else if (strcmp(s,"ls\n") == 0){
+				args[0] = "/bin/ls";
+			}
 			ret= execve(args[0], args, NULL);
 			if (ret < 0) {
 				fprintf(stderr, "execve failed : %s\n", strerror(errno));   
