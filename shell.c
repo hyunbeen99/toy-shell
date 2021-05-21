@@ -121,5 +121,9 @@ void built_command(char *s){
 		printf(RED "GOOD BYE\n" DEFAULT);
 		exit(0);
 	}
+	// Clear => 'clear'
+	if (strcmp(s,"clear\n") == 0){
+		printf("\e[1;1H\e[2J");
+	}
 
 }
