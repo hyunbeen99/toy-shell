@@ -10,7 +10,6 @@
 
 //Parameter
 #define MAX_LEN_LINE    100
-#define MAX_LEN_COMMAND_LINE 1000
 #define PATH_MAX        100
 #define LEN_HOSTNAME    30
 
@@ -23,6 +22,7 @@
 
 void getshellprompt();
 void built_command(char *s);
+void external_command(char *s);
 
 int main(void)
 {
@@ -33,38 +33,45 @@ int main(void)
     pid_t pid, cpid;
     
     while (true) {
-        char *s;
-        int len;
+		char *s;
+		int len;
 
 		getshellprompt();
 
-        s = fgets(command, MAX_LEN_LINE, stdin);
-		built_command(s);
+		s = fgets(command, MAX_LEN_LINE, stdin);
+		
+		if (strcmp(s, "clear\n")==0){
+			built_command(s);
+			continue;
+		}else{
+			built_command(s);
+		}
 
-        len = strlen(command);
-        //printf("%d\n", len);
-        if (command[len - 1] == '\n') {
-            command[len - 1] = '\0'; 
-        }
+		len = strlen(command);
+		//printf("%d\n", len);
+		if (command[len - 1] == '\n') {
+			command[len - 1] = '\0'; 
+		}
 
 		arg1 = strtok(command, " ");
 
-        pid = fork();
-        if (pid < 0) {
-            fprintf(stderr, "fork failed\n");
-            exit(1);
-        } 
-        if (pid != 0) {  /* parent */
-            cpid = waitpid(pid, &status, 0);
-            if (cpid != pid) {
-                fprintf(stderr, "waitpid failed\n");        
-            }
-            printf("Child process terminated\n");
-            if (WIFEXITED(status)) {
-                printf("Exit status is %d\n", WEXITSTATUS(status)); 
-            }
-        }
-        else {  /* child */
+		pid = fork();
+		if (pid < 0) {
+			fprintf(stderr, "fork failed\n");
+			exit(1);
+		} 
+		if (pid != 0) {  /* parent */
+			cpid = waitpid(pid, &status, 0);
+			if (cpid != pid) {
+				fprintf(stderr, "waitpid failed\n");        
+			}
+			printf("Child process terminated\n");
+			if (WIFEXITED(status)) {
+				printf("Exit status is %d\n", WEXITSTATUS(status)); 
+			}
+		}
+		else {  /* child */
+
 			// Print Current directory path => 'pwd'
 			if (strcmp(arg1,"pwd") == 0){
 				arg1 = strtok(NULL, " ");
@@ -77,9 +84,8 @@ int main(void)
 				args[0] = "/bin/ls";
 				args[1] = arg1;
 			}
-			//TODO : Other functions and refactoring
 			else{
-				printf("%s: commend not found\n", arg1);
+				printf("%s: command not found\n", arg1);
 			}
 
 			ret= execve(args[0], args, NULL);
@@ -108,9 +114,10 @@ void getshellprompt(void){
 	printf("%s$ ",cwd);
 	printf(DEFAULT);
 
-};
+}
 
 void built_command(char *s){
+	char changedir[PATH_MAX];
 
 	if (s == NULL) {
 		fprintf(stderr, "fgets failed\n");
