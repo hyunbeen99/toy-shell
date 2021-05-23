@@ -22,7 +22,12 @@
 
 void getshellprompt();
 void built_command(char *s);
-void external_command(char *s);
+int change_dir(char *s);
+
+int change_dir(char *s){
+	int result = chdir(s);
+	return 1;
+}
 
 int main(void)
 {
@@ -40,20 +45,25 @@ int main(void)
 
 		s = fgets(command, MAX_LEN_LINE, stdin);
 		
-		if (strcmp(s, "clear\n")==0){
+		if(!strcmp(s, "clear\n") || !strcmp(s, "cd\n")){
 			built_command(s);
 			continue;
-		}else{
+		}
+		else{
 			built_command(s);
 		}
 
 		len = strlen(command);
-		//printf("%d\n", len);
+		printf("%d\n", len);
+
 		if (command[len - 1] == '\n') {
 			command[len - 1] = '\0'; 
 		}
 
 		arg1 = strtok(command, " ");
+
+		printf("[%s]\n", command);
+
 
 		pid = fork();
 		if (pid < 0) {
@@ -132,5 +142,9 @@ void built_command(char *s){
 	if (strcmp(s,"clear\n") == 0){
 		printf("\e[1;1H\e[2J");
 	}
-
+	
+	// Change directory => 'cd'
+	if(strcmp(s, "cd\n")==0){
+		chdir(getenv("HOME"));
+	} 
 }
