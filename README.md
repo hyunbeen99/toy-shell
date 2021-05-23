@@ -9,6 +9,7 @@
 ✨ ls   => you can list current directory  
 ✨ clear => you can clear up the shell  
 ✨ cd => you can change directory to HOME (But I need to add cd .., cd [path] fucntion)  
+✨ plus, I added hostname, username, colored shell prompt
 
 
 ### 🚀 Example  
